@@ -1,0 +1,10 @@
+f
+exp(x) - 2*x - 2
+df
+exp(x) - 2
+phi
+log(2*x + 2)
+interval
+1 2
+x0
+2
