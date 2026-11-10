@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import sys
 import math
 
@@ -196,7 +198,7 @@ def save_error_plot(hist_si, hist_nw, x_ref, filename):
 def main():
     # использование: python lab2_1_nonlinear.py [eps] [файл]
     eps = float(sys.argv[1]) if len(sys.argv) > 1 else 0.001
-    filename = sys.argv[2] if len(sys.argv) > 2 else "data2.1.txt"
+    filename = sys.argv[2] if len(sys.argv) > 2 else Path(__file__).with_name("data2.1.txt")
 
     sections = read_sections(filename)
     f = compile_expression(sections["f"][0], ["x"])

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import sys
 import numpy as np
 
@@ -5,10 +7,12 @@ MAX_ITER = 10000
 
 
 def off_diagonal_norm(A, n):
+    """Критерий t(A) = ( sum_{l<m} a_lm^2 )^(1/2) - сумма квадратов внедиагональных элементов."""
     return np.sqrt(np.sum(np.triu(A, k=1) ** 2))
 
 
 def find_max_off_diagonal(A, n):
+    """Индексы (i, j), i < j, максимального по модулю внедиагонального элемента a_ij^(k)."""
     i_max, j_max, a_max = 0, 1, -1.0
     for i in range(n):
         for j in range(i + 1, n):
@@ -19,12 +23,22 @@ def find_max_off_diagonal(A, n):
 
 
 def rotation_angle(A, i, j):
+    """
+    Угол вращения из условия a_ij^(k+1) = 0:
+        phi = 1/2 * arctg( 2 a_ij / (a_ii - a_jj) ),
+    а если a_ii = a_jj, то phi = pi/4 (знак берём по знаку a_ij).
+    """
     if np.isclose(A[i, i], A[j, j]):
         return np.sign(A[i, j]) * np.pi / 4
     return 0.5 * np.arctan(2 * A[i, j] / (A[i, i] - A[j, j]))
 
 
 def rotation_matrix(n, i, j, phi):
+    """
+    Матрица вращения U^(k):
+        u_ii = u_jj = cos(phi),  u_ij = -sin(phi),  u_ji = sin(phi),
+        остальные диагональные = 1, остальные внедиагональные = 0.
+    """
     U_k = np.eye(n)
     U_k[i, i] = U_k[j, j] = np.cos(phi)
     U_k[i, j] = -np.sin(phi)
@@ -33,6 +47,13 @@ def rotation_matrix(n, i, j, phi):
 
 
 def jacobi_rotations(A, eps, n):
+    """
+    Метод вращений Якоби.
+    На каждой итерации:  A^(k+1) = (U^(k))^T A^(k) U^(k),
+    а накопленная матрица  U = U^(0) U^(1) ... U^(k)  содержит собственные векторы по столбцам.
+    Возвращает: A^(k) (с собственными значениями на диагонали), U,
+    число итераций и историю (t, диагональ, U) по итерациям для анализа погрешности.
+    """
     A_k = A.astype(float).copy()
     U = np.eye(n)
     history = [(off_diagonal_norm(A_k, n), np.diag(A_k).copy(), U.copy())]   # k = 0
@@ -53,6 +74,12 @@ def jacobi_rotations(A, eps, n):
 
 
 def error_analysis(A, history, n):
+    """
+    Таблица погрешностей по итерациям:
+      t_k     - критерий остановки,
+      err_lam - max |lambda_i^(k) - lambda_i(точное)|  (точное - numpy.linalg.eigvalsh),
+      err_ort - ||U^T U - E||  (нарушение ортогональности векторов).
+    """
     lam_exact = np.sort(np.linalg.eigvalsh(A))
     rows = []
     for k, (t, diag, U) in enumerate(history):
@@ -63,6 +90,7 @@ def error_analysis(A, history, n):
 
 
 def save_plot(rows, filename):
+    """График погрешности от номера итерации (лог. шкала). Если нет matplotlib - пропускаем."""
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -84,8 +112,9 @@ def save_plot(rows, filename):
 
 
 def main():
+    # использование: python lab1_4_jacobi_rotations.py [eps] [файл_с_матрицей]
     eps = float(sys.argv[1]) if len(sys.argv) > 1 else 0.01
-    filename = sys.argv[2] if len(sys.argv) > 2 else "data1.4.txt"
+    filename = sys.argv[2] if len(sys.argv) > 2 else Path(__file__).with_name("data1.4.txt")
     digits = 4
 
     A = np.loadtxt(filename, ndmin=2)

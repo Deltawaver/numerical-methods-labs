@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import sys
 import numpy as np
 
@@ -122,7 +124,7 @@ def format_complex(z, digits):
 def main():
     # использование: python lab1_5_qr.py [eps] [файл_с_матрицей]
     eps = float(sys.argv[1]) if len(sys.argv) > 1 else 0.01
-    filename = sys.argv[2] if len(sys.argv) > 2 else "data1.5.txt"
+    filename = sys.argv[2] if len(sys.argv) > 2 else Path(__file__).with_name("data1.5.txt")
     digits = 4
 
     A = np.loadtxt(filename, ndmin=2)
